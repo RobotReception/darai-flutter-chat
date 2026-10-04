@@ -1,0 +1,21 @@
+name: darai_chat_example
+description: Example app for the Darai Flutter chat package.
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.8
+
+dependencies:
+  flutter:
+    sdk: flutter
+  darai_chat:
+    path: ..
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
