@@ -1,0 +1,51 @@
+name: Publish Flutter v0.1.0
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/release-v0.1.0.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: release-v0.1.0
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 884a69b50e3b5c76d4c0404c61cfe76ec173c9ca
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.0'
+          channel: stable
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed lib test example/lib
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter pub get && flutter analyze
+        working-directory: example
+      - name: Package source
+        run: |
+          python3 tool/package.py
+          cp ../darai-flutter-chat-0.1.0.zip .
+          cp ../darai-flutter-chat-0.1.0.zip.sha256 .
+          cat > release-notes.md <<'NOTES'
+          حزمة داري Flutter 0.1.0: شاشة دردشة عربية قابلة للتعديل، عميل اتصال مستقل، مثال Android، وإعدادات قناة منفصلة.
+
+          تشمل النصوص والصور وإعادة الاتصال وهوية المستخدم الاختيارية من خادم التطبيق. اقرأ README لتشغيل المثال والدمج والتخصيص.
+
+          التحليل والاختبارات يتم التحقق منهما قبل الإصدار. لا يشمل سجلًا دائمًا أو إشعارات خلفية أو عارض مرفقات واردة. لم تُنفّذ تجربة جهاز فعلي أو بناء iOS؛ اختبر تطبيقك قبل الإطلاق.
+
+          مصدر الإصدار: 884a69b50e3b5c76d4c0404c61cfe76ec173c9ca. الترخيص MIT؛ الخطوط غير مضمنة.
+          NOTES
+      - name: Publish ZIP and checksum
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view v0.1.0 >/dev/null 2>&1; then
+            echo "Release already exists; leaving assets unchanged."
+            exit 0
+          fi
+          gh release create v0.1.0 darai-flutter-chat-0.1.0.zip darai-flutter-chat-0.1.0.zip.sha256 --target 884a69b50e3b5c76d4c0404c61cfe76ec173c9ca --title "Darai Flutter Chat v0.1.0" --notes-file release-notes.md
